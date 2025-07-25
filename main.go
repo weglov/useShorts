@@ -8,7 +8,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/joho/godotenv"
 	"github.com/sashabaranov/go-openai"
 )
@@ -59,7 +59,7 @@ func main() {
 		if update.Message != nil {
 			app.handleMessage(update.Message)
 		}
-		
+
 		if update.ChannelPost != nil {
 			app.handleChannelPost(update.ChannelPost)
 		}
@@ -68,6 +68,7 @@ func main() {
 
 func (b *Bot) handleMessage(msg *tgbotapi.Message) {
 	// Check for automatic forward from channel
+	log.Printf(msg.ForwardSenderName, msg.IsAutomaticForward, msg.ForwardFromChat.IsChannel())
 	if msg.IsAutomaticForward && msg.ForwardFromChat != nil && msg.ForwardFromChat.IsChannel() {
 		b.handleChannelPost(msg)
 		return
@@ -113,12 +114,12 @@ func (b *Bot) loadPromptTemplate() (string, error) {
 
 func (b *Bot) summarizeText(text string) (string, error) {
 	maxLength := int(float64(len(text)) * 0.3)
-	
+
 	promptTemplate, err := b.loadPromptTemplate()
 	if err != nil {
 		return "", fmt.Errorf("failed to load prompt template: %v", err)
 	}
-	
+
 	prompt := fmt.Sprintf(promptTemplate, maxLength, text)
 
 	resp, err := b.ai.CreateChatCompletion(
